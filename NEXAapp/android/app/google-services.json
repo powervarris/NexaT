@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "837809811184",
+    "project_id": "nexa-app-2f893",
+    "storage_bucket": "nexa-app-2f893.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837809811184:android:8475cde9f55f8a021fdc35",
+        "android_client_info": {
+          "package_name": "com.example.nexaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARlC8-rQJgjOFTUzPBQRHoiOx9Oi4rGRc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

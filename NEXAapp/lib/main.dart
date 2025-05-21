@@ -5,10 +5,14 @@ import 'package:nexaapp/story.dart'; // StoryScreen
 import 'package:nexaapp/messages.dart'; // MessagesScreen
 import 'package:nexaapp/settings.dart'; // SettingsScreen
 import 'package:nexaapp/profile.dart'; // ProfileScreen
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MaterialApp(
     home: LoginScreen(),
     // if u dont have navigate yet, pero want to check, change niyo dito

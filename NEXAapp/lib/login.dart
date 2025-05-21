@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
 import 'register.dart';
 import 'homepage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: loginForm(),
+    );
+  }
+}
+
+class loginForm extends StatefulWidget {
+  const loginForm({super.key});
+
+  @override
+  State<loginForm> createState() => _loginFormState();
+}
+
+class _loginFormState extends State<loginForm> {
+  @override
+
+  var emailController = TextEditingController();
+  var passwordController = TextEditingController();
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF1F1E1E),
@@ -31,6 +52,7 @@ class LoginScreen extends StatelessWidget {
             ),
             SizedBox(height: 5),
             TextField(
+              controller: emailController,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Color(0xFF7C7979),// Background color
@@ -68,6 +90,7 @@ class LoginScreen extends StatelessWidget {
             ),
             SizedBox(height: 5),
             TextField(
+              controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 filled: true,
@@ -120,13 +143,47 @@ class LoginScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF47135C),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomepageScreen(),
-                        ),
-                      );
+                    onPressed: () async {
+                      var email = emailController.text;
+                      var password = passwordController.text;
+
+                      if (email.isEmpty || password.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Please enter both email and password!'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      try {
+                        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Sign-in successful!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HomepageScreen(),
+                          ),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Sign-in failed: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     child: Text(
                       'Sign In',
@@ -169,3 +226,4 @@ class LoginScreen extends StatelessWidget {
     );
   }
 }
+

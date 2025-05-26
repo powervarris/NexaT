@@ -7,12 +7,17 @@ import 'package:nexaapp/settings.dart'; // SettingsScreen
 import 'package:nexaapp/profile.dart'; // ProfileScreen
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nexaapp/accountcenter.dart'; // AccountCenterScreen
+import 'package:nexaapp/changepassword.dart'; // ChangePasswordScreen
+import 'package:nexaapp/firebase_options.dart';
 
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MaterialApp(
     home: LoginScreen(),
     // if u dont have navigate yet, pero want to check, change niyo dito

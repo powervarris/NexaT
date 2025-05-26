@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'homepage.dart';
 import 'post.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nexaapp/settings.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
   Widget highlightBox(String imagePath, String label, {bool showDot = false}) {
     return Padding(
       padding: const EdgeInsets.only(right: 15),
@@ -48,6 +50,8 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL;
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -68,7 +72,12 @@ class ProfileScreen extends StatelessWidget {
                 color: Color(0xFFEA33F7),
                 size: 50,
               ),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -76,15 +85,17 @@ class ProfileScreen extends StatelessWidget {
           color: Colors.black,
           child: Column(
             children: [
-              const SizedBox(height: 30),
+              SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: 16, right: 20),
                     child: CircleAvatar(
-                      backgroundImage: AssetImage("images/avatar.jpg"),
+                      backgroundImage: photoUrl != null
+                          ? NetworkImage(photoUrl)
+                          : const AssetImage('images/nexa-logo-no-glow.png') as ImageProvider,
                       radius: 50,
                     ),
                   ),
@@ -95,8 +106,8 @@ class ProfileScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            "Ayrinx",
+                            Text(
+                            FirebaseAuth.instance.currentUser?.displayName ?? "No Name",
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -106,22 +117,70 @@ class ProfileScreen extends StatelessWidget {
                           const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
+                            children: [
                               Column(
                                 children: [
-                                  Text("12", style: TextStyle(fontSize: 17, color: Colors.white)),
+                                  FutureBuilder<DocumentSnapshot>(
+                                    future: FirebaseFirestore.instance.collection("tbl_users").doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return Text("...", style: TextStyle(fontSize: 17, color: Colors.white));
+                                      }
+                                      if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+                                        return Text("0", style: TextStyle(fontSize: 17, color: Colors.white));
+                                      }
+                                      final data = snapshot.data!.data() as Map<String, dynamic>;
+                                      final followers = data["no_of_posts"] ?? 0;
+                                      return Text(
+                                        followers.toString(),
+                                        style: const TextStyle(fontSize: 17, color: Colors.white),
+                                      );
+                                    },
+                                  ),
                                   Text("posts", style: TextStyle(fontSize: 17, color: Colors.white)),
                                 ],
                               ),
                               Column(
                                 children: [
-                                  Text("420", style: TextStyle(fontSize: 17, color: Colors.white)),
+                                  FutureBuilder<DocumentSnapshot>(
+                                    future: FirebaseFirestore.instance.collection("tbl_users").doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return Text("...", style: TextStyle(fontSize: 17, color: Colors.white));
+                                      }
+                                      if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+                                        return Text("0", style: TextStyle(fontSize: 17, color: Colors.white));
+                                      }
+                                      final data = snapshot.data!.data() as Map<String, dynamic>;
+                                      final followers = data["no_of_followers"] ?? 0;
+                                      return Text(
+                                        followers.toString(),
+                                        style: const TextStyle(fontSize: 17, color: Colors.white),
+                                      );
+                                    },
+                                  ),
                                   Text("followers", style: TextStyle(fontSize: 17, color: Colors.white)),
                                 ],
                               ),
                               Column(
                                 children: [
-                                  Text("447", style: TextStyle(fontSize: 17, color: Colors.white)),
+                                  FutureBuilder<DocumentSnapshot>(
+                                    future: FirebaseFirestore.instance.collection("tbl_users").doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return Text("...", style: TextStyle(fontSize: 17, color: Colors.white));
+                                      }
+                                      if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+                                        return Text("0", style: TextStyle(fontSize: 17, color: Colors.white));
+                                      }
+                                      final data = snapshot.data!.data() as Map<String, dynamic>;
+                                      final followers = data["no_of_following"] ?? 0;
+                                      return Text(
+                                        followers.toString(),
+                                        style: const TextStyle(fontSize: 17, color: Colors.white),
+                                      );
+                                    },
+                                  ),
                                   Text("following", style: TextStyle(fontSize: 17, color: Colors.white)),
                                 ],
                               ),

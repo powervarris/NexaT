@@ -4,11 +4,13 @@ import 'profile.dart';
 import 'post.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:nexaapp/settings.dart';
 
 class HomepageScreen extends StatelessWidget {
   const HomepageScreen({super.key});
 
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return MaterialApp(
       home: homepageForm(),
     );
@@ -24,6 +26,7 @@ class homepageForm extends StatefulWidget {
 
 class _homepageFormState extends State<homepageForm> {
   var commentController = TextEditingController();
+
   @override
   Widget highlightBox(String imagePath, String label, {bool showDot = false}) {
     return Padding(
@@ -67,7 +70,9 @@ class _homepageFormState extends State<homepageForm> {
     );
   }
 
-  void showComments(BuildContext context) {
+  void showComments(BuildContext context, String postId) {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL ?? 'images/nexa-logo-no-glow.png';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -86,13 +91,16 @@ class _homepageFormState extends State<homepageForm> {
               const Divider(color: Color(0xFFEA33F7)),
               Expanded(
                 child: StreamBuilder(
-                    stream: FirebaseFirestore.instance.collection("tbl_comments").orderBy("created_at", descending: true).snapshots(),
-                    builder: (context, snapshot){
+                    stream: FirebaseFirestore.instance
+                        .collection("tbl_comments")
+                        .where("post_id", isEqualTo: postId)
+                        .snapshots(),
+                    builder: (context, snapshot) {
                       var records = snapshot.data?.docs ?? [];
                       return ListView.builder(
                         controller: controller,
                         itemCount: records.length,
-                        itemBuilder: (context, index){
+                        itemBuilder: (context, index) {
                           var rec = records[index];
                           Timestamp timestamp = rec["created_at"];
                           DateTime date = timestamp.toDate();
@@ -102,7 +110,10 @@ class _homepageFormState extends State<homepageForm> {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Row(
                               children: [
-                                const CircleAvatar(backgroundImage: AssetImage("images/avatar.jpg"), radius: 20),
+                                CircleAvatar(
+                                  backgroundImage: NetworkImage(photoUrl),
+                                  radius: 25,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
@@ -119,12 +130,14 @@ class _homepageFormState extends State<homepageForm> {
                           );
                         },
                       );
-                    }
-                ),
+                    }),
               ),
               Row(
                 children: [
-                  const CircleAvatar(backgroundImage: AssetImage("images/avatar.jpg")),
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(photoUrl),
+                    radius: 25,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
@@ -140,13 +153,14 @@ class _homepageFormState extends State<homepageForm> {
                         ),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.gif, color: Color(0xFFEA33F7)),
-                          onPressed: (){
+                          onPressed: () {
                             var comment = commentController.text;
                             if (comment.isNotEmpty) {
                               FirebaseFirestore.instance.collection("tbl_comments").add({
                                 "content": comment,
                                 "created_at": FieldValue.serverTimestamp(),
                                 "user": FirebaseAuth.instance.currentUser?.email,
+                                "post_id": postId,
                               });
                               commentController.clear();
                             }
@@ -174,6 +188,7 @@ class _homepageFormState extends State<homepageForm> {
     required String likedBy,
     required String commentUser,
     required String commentText,
+    required String postId,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -181,7 +196,7 @@ class _homepageFormState extends State<homepageForm> {
         children: [
           Row(
             children: [
-              CircleAvatar(backgroundImage: AssetImage(profileImg), radius: 23),
+              CircleAvatar(backgroundImage: NetworkImage(profileImg), radius: 23),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,18 +213,19 @@ class _homepageFormState extends State<homepageForm> {
             ],
           ),
           const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(postImg),
-          ),
-          const SizedBox(height: 10),
+          if (postImg.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(postImg),
+            ),
+          if (postImg.isNotEmpty) const SizedBox(height: 10),
           Row(
             children: [
               const Icon(Icons.favorite, color: Color(0xFFEA33F7)),
               const SizedBox(width: 10),
               IconButton(
                 icon: const Icon(Icons.mode_comment_outlined, color: Color(0xFFEA33F7)),
-                onPressed: () => showComments(context),
+                onPressed: () => showComments(context, postId),
               ),
               const SizedBox(width: 10),
               const Icon(Icons.send, color: Color(0xFFEA33F7)),
@@ -253,6 +269,8 @@ class _homepageFormState extends State<homepageForm> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL ?? 'images/nexa-logo-no-glow.png';
     return MaterialApp(
       home: Scaffold(
         backgroundColor: Colors.black,
@@ -274,7 +292,12 @@ class _homepageFormState extends State<homepageForm> {
                 color: Color(0xFFEA33F7),
                 size: 50,
               ),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -300,35 +323,39 @@ class _homepageFormState extends State<homepageForm> {
             ),
             Expanded(
                 child: StreamBuilder(
-                    stream: FirebaseFirestore.instance.collection("tbl_posts").orderBy("created_at", descending: true).snapshots(),
-                    builder: (context, snapshot){
+                    stream: FirebaseFirestore.instance
+                        .collection("tbl_posts")
+                        .orderBy("created_at", descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
                       var records = snapshot.data?.docs ?? [];
                       return ListView.builder(
                         itemCount: records.length,
-                        itemBuilder: (context, index){
+                        itemBuilder: (context, index) {
                           var rec = records[index];
                           Timestamp timestamp = rec["created_at"];
                           DateTime date = timestamp.toDate();
                           var formattedDate = DateFormat("dd/MM/yyyy hh:mm").format(date);
+                          String imageUrl = rec["image_url"] ?? "";
+                          var postId = rec.id;
 
                           return Padding(
                             padding: const EdgeInsets.all(20),
                             child: buildPost(
                               context: context,
-                              profileImg: "images/sohee.jpg",
+                              profileImg: photoUrl,
                               username: rec["user"],
                               time: formattedDate,
-                              postImg: "images/raj.jpg",
+                              postImg: imageUrl,
                               likedBy: "Jae.ee",
-                              commentUser: "Name",
+                              commentUser: rec["user"],
                               commentText: rec["content"],
+                              postId: postId,
                             ),
                           );
                         },
                       );
-                    }
-                )
-            ),
+                    })),
           ],
         ),
         bottomNavigationBar: BottomAppBar(
@@ -364,8 +391,8 @@ class _homepageFormState extends State<homepageForm> {
                     MaterialPageRoute(builder: (context) => const ProfileScreen()),
                   );
                 },
-                child: const CircleAvatar(
-                  backgroundImage: AssetImage("images/avatar.jpg"),
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(photoUrl),
                   radius: 15,
                 ),
               ),

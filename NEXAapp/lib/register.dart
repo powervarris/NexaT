@@ -274,6 +274,7 @@ class _registerFormState extends State<registerForm> {
                           'email': emailAdd,
                           'no_of_followers': 0,
                           'no_of_following': 0,
+                          'no_of_posts': 0,
                           'bio': '',
                           'profile_pic': '',
                         });

@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:nexaapp/settings.dart';
+import 'package:nexaapp/messages.dart';
+import 'package:nexaapp/story.dart';
 
 class HomepageScreen extends StatelessWidget {
   const HomepageScreen({super.key});
@@ -189,6 +191,7 @@ class _homepageFormState extends State<homepageForm> {
     required String commentUser,
     required String commentText,
     required String postId,
+    required int noOfLikes,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -221,7 +224,7 @@ class _homepageFormState extends State<homepageForm> {
           if (postImg.isNotEmpty) const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.favorite, color: Color(0xFFEA33F7)),
+              _PostLikeButton(postId: postId, initialLikes: noOfLikes),
               const SizedBox(width: 10),
               IconButton(
                 icon: const Icon(Icons.mode_comment_outlined, color: Color(0xFFEA33F7)),
@@ -230,7 +233,7 @@ class _homepageFormState extends State<homepageForm> {
               const SizedBox(width: 10),
               const Icon(Icons.send, color: Color(0xFFEA33F7)),
               const Spacer(),
-              const Icon(Icons.bookmark, color: Color(0xFFEA33F7)),
+              const Icon(Icons.bookmark_outline, color: Color(0xFFEA33F7)),
             ],
           ),
           const SizedBox(height: 5),
@@ -245,8 +248,8 @@ class _homepageFormState extends State<homepageForm> {
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 13)),
-              const Text(" and 100 others",
-                  style: TextStyle(color: Colors.white, fontSize: 13)),
+              Text(" and $noOfLikes others",
+                  style: const TextStyle(color: Colors.white, fontSize: 13)),
             ],
           ),
           const SizedBox(height: 2),
@@ -277,25 +280,31 @@ class _homepageFormState extends State<homepageForm> {
         appBar: AppBar(
           backgroundColor: Colors.black,
           elevation: 0,
-          leadingWidth: 100,
+          leadingWidth: 70,
           leading: Container(
-            padding: const EdgeInsets.all(10),
-            child: Image.asset(
-              'images/nexa-logo-no-glow.png',
-              fit: BoxFit.contain,
+            padding: const EdgeInsets.all(5),
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: Center(
+                child: Image.asset(
+                  'images/nexa-logo-no-glow.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
           ),
           actions: [
             IconButton(
               icon: const Icon(
-                Icons.menu,
+                Icons.message_outlined,
                 color: Color(0xFFEA33F7),
-                size: 50,
+                size: 30,
               ),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  MaterialPageRoute(builder: (context) => const MessagesScreen()),
                 );
               },
             ),
@@ -311,6 +320,36 @@ class _homepageFormState extends State<homepageForm> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const StoryScreen()),
+                      );
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 65,
+                          height: 65,
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            border: Border.all(color: Colors.cyan, width: 2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.add, color: Color(0xFFEA33F7), size: 35),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          "Add Story",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
                   highlightBox("images/hh1.jpg", "Han", showDot: true),
                   highlightBox("images/hh2.jpg", "So-Hee"),
                   highlightBox("images/hh3.jpg", "Xee"),
@@ -338,6 +377,7 @@ class _homepageFormState extends State<homepageForm> {
                           var formattedDate = DateFormat("dd/MM/yyyy hh:mm").format(date);
                           String imageUrl = rec["image_url"] ?? "";
                           var postId = rec.id;
+                          int noOfLikes = rec["no_of_likes"] ?? 0;
 
                           return Padding(
                             padding: const EdgeInsets.all(20),
@@ -351,6 +391,7 @@ class _homepageFormState extends State<homepageForm> {
                               commentUser: rec["user"],
                               commentText: rec["content"],
                               postId: postId,
+                              noOfLikes: noOfLikes,
                             ),
                           );
                         },
@@ -400,6 +441,68 @@ class _homepageFormState extends State<homepageForm> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PostLikeButton extends StatefulWidget {
+  final String postId;
+  final int initialLikes;
+
+  const _PostLikeButton({super.key, required this.postId, required this.initialLikes});
+
+  @override
+  State<_PostLikeButton> createState() => _PostLikeButtonState();
+}
+
+class _PostLikeButtonState extends State<_PostLikeButton> {
+  bool isLiked = false;
+  int likeCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    likeCount = widget.initialLikes;
+  }
+
+  Future<void> _handleLike() async {
+    if (!isLiked) {
+      setState(() {
+        isLiked = true;
+        likeCount += 1;
+      });
+      await FirebaseFirestore.instance
+          .collection("tbl_posts")
+          .doc(widget.postId)
+          .update({"no_of_likes": FieldValue.increment(1)});
+    } else {
+      setState(() {
+        isLiked = false;
+        likeCount -= 1;
+      });
+      await FirebaseFirestore.instance
+          .collection("tbl_posts")
+          .doc(widget.postId)
+          .update({"no_of_likes": FieldValue.increment(-1)});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(
+            isLiked ? Icons.favorite : Icons.favorite_outline,
+            color: const Color(0xFFEA33F7),
+          ),
+          onPressed: _handleLike,
+        ),
+        Text(
+          '$likeCount',
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+        ),
+      ],
     );
   }
 }

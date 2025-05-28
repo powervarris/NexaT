@@ -140,7 +140,6 @@ class _AccountCenterScreenState extends State<AccountCenterScreen> {
                       child: const CircleAvatar(
                         backgroundColor: Colors.purpleAccent,
                         radius: 20,
-                        child: Icon(Icons.edit, color: Colors.white, size: 20),
                       ),
                     ),
                   ),

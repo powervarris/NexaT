@@ -120,7 +120,12 @@ class _postFormState extends State<postForm> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Color(0xFFEA33F7)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomepageScreen(),
+            ),
+          ),
         ),
         actions: [
           TextButton(

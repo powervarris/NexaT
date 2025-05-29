@@ -284,8 +284,8 @@ class ProfileScreen extends StatelessWidget {
                           child: const Icon(Icons.add_box_outlined, color: Color(0xFFEA33F7), size: 30),
                         ),
                         const Icon(Icons.movie_outlined, color: Color(0xFFEA33F7), size: 30),
-                        const CircleAvatar(
-                          backgroundImage: AssetImage("images/avatar.jpg"),
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(photoUrl!),
                           radius: 15,
                         ),
                       ],

@@ -73,13 +73,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final user = FirebaseAuth.instance.currentUser?.displayName;
+
     return Scaffold(
       backgroundColor: const Color(0xFF1F1E1E),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F1E1E),
         iconTheme: const IconThemeData(color: Color(0xFFEA33F7)),
-        title: const Text(
-          'jaeee.eee.e',
+        title: Text(
+          user!,
           style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
         ),
         centerTitle: false,

@@ -113,6 +113,9 @@ class _postFormState extends State<postForm> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -154,8 +157,8 @@ class _postFormState extends State<postForm> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundImage: AssetImage("images/avatar.jpg"),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(photoUrl!),
                   radius: 20,
                 ),
                 const SizedBox(width: 10),
